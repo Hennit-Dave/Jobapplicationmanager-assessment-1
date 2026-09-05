@@ -4,7 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { resetPasswordSchema, type ResetPasswordInput } from "@/lib/validation/auth";
+import {
+  resetPasswordSchema,
+  getUnmetPasswordRequirements,
+  type ResetPasswordInput,
+} from "@/lib/validation/auth";
+import { PasswordInput } from "@/components/PasswordInput";
+import { PasswordRequirementsList } from "@/components/PasswordRequirementsList";
 
 export default function ResetPasswordPage({ params }: { params: { token: string } }) {
   const router = useRouter();
@@ -12,11 +18,16 @@ export default function ResetPasswordPage({ params }: { params: { token: string 
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<ResetPasswordInput>({
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: { token: params.token },
   });
+
+  const passwordValue = watch("password") ?? "";
+  const isFormComplete =
+    passwordValue.length > 0 && getUnmetPasswordRequirements(passwordValue).length === 0;
 
   async function onSubmit(data: ResetPasswordInput) {
     setServerError(null);
@@ -46,18 +57,20 @@ export default function ResetPasswordPage({ params }: { params: { token: string 
           <input type="hidden" {...register("token")} />
           <div className="field">
             <label htmlFor="password">New password</label>
-            <input
+            <PasswordInput
               id="password"
-              type="password"
               autoComplete="new-password"
-              aria-invalid={errors.password ? "true" : "false"}
-              {...register("password")}
+              ariaInvalid={!!errors.password}
+              value={passwordValue}
+              registration={register("password")}
             />
-            {errors.password ? (
-              <p className="field-error">{errors.password.message}</p>
-            ) : null}
+            <PasswordRequirementsList value={passwordValue} />
           </div>
-          <button className="primary-button" type="submit" disabled={isSubmitting}>
+          <button
+            className="primary-button"
+            type="submit"
+            disabled={isSubmitting || !isFormComplete}
+          >
             {isSubmitting ? "Resetting…" : "Reset password"}
           </button>
         </form>

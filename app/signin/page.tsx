@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signinSchema, type SigninInput } from "@/lib/validation/auth";
+import { PasswordInput } from "@/components/PasswordInput";
 
 export default function SigninPage() {
   const router = useRouter();
@@ -12,8 +13,11 @@ export default function SigninPage() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<SigninInput>({ resolver: zodResolver(signinSchema) });
+
+  const passwordValue = watch("password") ?? "";
 
   async function onSubmit(data: SigninInput) {
     setServerError(null);
@@ -70,12 +74,12 @@ export default function SigninPage() {
           </div>
           <div className="field">
             <label htmlFor="password">Password</label>
-            <input
+            <PasswordInput
               id="password"
-              type="password"
               autoComplete="current-password"
-              aria-invalid={errors.password ? "true" : "false"}
-              {...register("password")}
+              ariaInvalid={!!errors.password}
+              value={passwordValue}
+              registration={register("password")}
             />
             {errors.password ? (
               <p className="field-error">{errors.password.message}</p>

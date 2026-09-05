@@ -66,6 +66,13 @@ export const passwordSchema = z.string().superRefine((value, ctx) => {
   }
 });
 
+// Shared by every form with a live password-requirements checklist
+// (signup, reset-password) so they can never drift from each other or
+// from passwordSchema above.
+export function getUnmetPasswordRequirements(value: string): PasswordRequirement[] {
+  return PASSWORD_REQUIREMENTS.filter((requirement) => !requirement.test(value));
+}
+
 export const signupSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
