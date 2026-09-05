@@ -46,6 +46,18 @@ a {
   color: var(--color-on-surface);
 }
 
+.auth-card form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-large-spacing);
+}
+
+.auth-card p {
+  font: var(--typescale-body-medium-font);
+  color: var(--color-on-surface-variant);
+  margin: 0;
+}
+
 .field {
   display: flex;
   flex-direction: column;
