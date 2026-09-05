@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "seed:evidence": "tsx scripts/seed-auth-evidence.ts"
+    "seed:evidence": "tsx --env-file=.env scripts/seed-auth-evidence.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.3",
