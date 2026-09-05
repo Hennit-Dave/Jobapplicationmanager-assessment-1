@@ -1,0 +1,136 @@
+@import "../tokens.css";
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-on-background);
+  font: var(--typescale-body-large-font);
+}
+
+a {
+  color: var(--color-primary);
+}
+
+.auth-shell {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-extra-large-spacing);
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: 12px;
+  padding: var(--spacing-very-large-spacing);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-large-spacing);
+}
+
+.auth-card h1 {
+  font: var(--typescale-headline-small-font);
+  margin: 0;
+  color: var(--color-on-surface);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-extra-small-spacing);
+}
+
+.field label {
+  font: var(--typescale-label-large-font);
+  color: var(--color-on-surface-variant);
+}
+
+.field input {
+  font: var(--typescale-body-large-font);
+  padding: var(--spacing-medium-spacing);
+  border: 1px solid var(--color-outline);
+  border-radius: 8px;
+  background: var(--color-surface-container-lowest);
+  color: var(--color-on-surface);
+}
+
+.field input:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.field-error {
+  font: var(--typescale-body-small-font);
+  color: var(--color-error);
+}
+
+.form-message {
+  font: var(--typescale-body-medium-font);
+  padding: var(--spacing-medium-spacing);
+  border-radius: 8px;
+}
+
+.form-message.success {
+  background: var(--color-secondary-container);
+  color: var(--color-on-secondary-container);
+}
+
+.form-message.error {
+  background: var(--color-error-container);
+  color: var(--color-on-error-container);
+}
+
+button.primary-button {
+  font: var(--typescale-title-small-font);
+  padding: var(--spacing-medium-spacing);
+  border-radius: 8px;
+  border: none;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  cursor: pointer;
+}
+
+button.primary-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+button.primary-button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+button.link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--color-primary);
+  font: var(--typescale-label-large-font);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+button.link-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+.auth-links {
+  display: flex;
+  justify-content: space-between;
+  font: var(--typescale-body-small-font);
+}

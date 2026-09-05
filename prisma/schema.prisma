@@ -1,0 +1,87 @@
+// Prisma schema for the Application Manager Track authentication slice.
+// PRD v3 Section 6 / AGENTS.md v2 "File structure expectations" define this
+// exact shape: Auth.js's User/Account/Session models (User extended with
+// passwordHash), plus the custom verification_codes and
+// password_reset_tokens tables. Auth.js's VerificationToken model is
+// intentionally omitted -- it backs the Email (magic-link) provider, which
+// this slice does not use.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  // Custom addition: Auth.js's schema contract does not define this field.
+  // Auth.js's Credentials provider does not hash or store passwords itself.
+  passwordHash  String
+  createdAt     DateTime  @default(now())
+
+  accounts            Account[]
+  sessions            Session[]
+  verificationCodes   VerificationCode[]
+  passwordResetTokens PasswordResetToken[]
+}
+
+// Required by @auth/prisma-adapter's schema contract. Unused in this slice
+// since no OAuth provider is configured -- kept rather than forking a
+// custom adapter schema to remove one unused table (PRD v3 Section 6).
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationCode {
+  id         String    @id @default(cuid())
+  userId     String
+  code       String
+  expiresAt  DateTime
+  consumedAt DateTime?
+  lastSentAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("verification_codes")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_reset_tokens")
+}
