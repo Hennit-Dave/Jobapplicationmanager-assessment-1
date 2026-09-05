@@ -1,17 +1,16 @@
 import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
 
 // Pinned explicitly (matches Auth.js's own 30-day default) so the manual
-// session creation used by email verification (PRD v3 5.2.3,
-// lib/auth/manualSession.ts) issues sessions with the same lifetime as
-// ones Auth.js creates itself via sign-in.
+// session creation used by both sign-in and email verification
+// (lib/auth/manualSession.ts) issues sessions with the same lifetime Auth.js
+// would use natively.
 export const SESSION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;
 
-// Exported so the email-verification route can call `authAdapter.createSession`
-// directly -- the same adapter instance Auth.js itself uses -- rather than
-// re-running the Credentials provider (PRD v3 5.2.3).
+// Exported so the sign-in and email-verification routes can call
+// `authAdapter.createSession` directly -- the same adapter instance Auth.js
+// itself would use.
 export const authAdapter = PrismaAdapter(prisma);
 
 // Auth.js (v5) configuration.
@@ -23,11 +22,22 @@ export const authAdapter = PrismaAdapter(prisma);
 // reset (PRD v3 5.4.4) actually work -- there is nothing to "revoke" in a
 // stateless JWT.
 //
-// The Credentials provider's `authorize()` callback is a stub here. Its
-// real logic (rate-limit check, emailVerified check, bcrypt comparison)
-// is filled in during build step 9, once lib/auth/rateLimit.ts and
-// lib/auth/password.ts exist -- see skill.md's build order.
-export const { handlers, auth, signIn, signOut } = NextAuth({
+// No Credentials provider is registered here. @auth/core hard-rejects that
+// combination: when a Credentials provider is the *only* configured
+// provider and session.strategy is "database", every Auth.js endpoint
+// (sign-in, session reads, sign-out) throws UnsupportedStrategy --
+// confirmed by actually running it, not just reading the source
+// (node_modules/@auth/core/lib/utils/assert.js:113-118, "Signing in with
+// credentials only supported if JWT strategy is enabled"). AGENTS.md's
+// rule 6 rules out switching to JWT sessions, so /api/signin instead
+// re-implements exactly what the Credentials provider's authorize() would
+// have done (rate limit -> emailVerified check -> bcrypt compare) and
+// creates the session the same way email verification already does: by
+// calling this adapter's createSession() directly. `auth()`, `signOut()`,
+// and the database session strategy itself are unaffected by this --
+// only the (non-functional, under this strategy) Credentials provider is
+// gone.
+export const { handlers, auth, signOut } = NextAuth({
   adapter: authAdapter,
   session: {
     strategy: "database",
@@ -39,20 +49,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   // Auth.js's defaults for the database-session cookie already satisfy
   // RULES-security-validation.md's session rules: httpOnly always on,
   // sameSite=lax, and secure whenever the app is served over https (which
-  // Auth.js derives from the request/AUTH_URL, switching the cookie name
-  // to the `__Secure-` prefixed variant automatically). Left un-overridden
-  // deliberately so that automatic detection keeps working; confirmed by
-  // inspecting the Set-Cookie header once sign-in exists (build step 9).
-  providers: [
-    Credentials({
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
-      },
-      async authorize() {
-        // Implemented in build step 9.
-        return null;
-      },
-    }),
-  ],
+  // Auth.js derives from the request URL, switching the cookie name to the
+  // `__Secure-` prefixed variant automatically). Left un-overridden
+  // deliberately so auth() keeps reading whatever cookie name/shape
+  // lib/auth/manualSession.ts wrote, which mirrors this exactly.
+  providers: [],
 });
