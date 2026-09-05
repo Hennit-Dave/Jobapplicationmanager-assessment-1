@@ -1,59 +1,15 @@
-import { randomInt } from "node:crypto";
 import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { signupSchema } from "@/lib/validation/auth";
 import { hashPassword } from "@/lib/auth/password";
 import { checkRateLimit, getClientIp, rateLimitedResponse } from "@/lib/auth/rateLimit";
-import { sendEmail, verificationCodeEmail } from "@/lib/email";
+import { issueVerificationCode, resendOrIssueVerificationCode } from "@/lib/auth/verificationCode";
 import {
   createVerifyEmailToken,
   VERIFY_EMAIL_COOKIE_MAX_AGE_SECONDS,
   VERIFY_EMAIL_COOKIE_NAME,
 } from "@/lib/auth/verifyEmailToken";
-
-const VERIFICATION_CODE_TTL_MINUTES = 10;
-const RESEND_COOLDOWN_SECONDS = 60;
-
-function generateSixDigitCode(): string {
-  return randomInt(0, 1_000_000).toString().padStart(6, "0");
-}
-
-async function issueVerificationCode(userId: string, email: string): Promise<void> {
-  const code = generateSixDigitCode();
-  const expiresAt = new Date(Date.now() + VERIFICATION_CODE_TTL_MINUTES * 60_000);
-  await prisma.verificationCode.create({
-    data: { userId, code, expiresAt, lastSentAt: new Date() },
-  });
-  await sendEmail(email, verificationCodeEmail(code));
-}
-
-// PRD v3 5.1.5: while a still-valid code exists, don't mint a new one --
-// re-send the same code, but only once the resend cooldown has elapsed.
-async function resendOrIssueVerificationCode(userId: string, email: string): Promise<void> {
-  const now = new Date();
-  const existingCode = await prisma.verificationCode.findFirst({
-    where: { userId, consumedAt: null },
-    orderBy: { expiresAt: "desc" },
-  });
-
-  if (existingCode && existingCode.expiresAt > now) {
-    const cooldownEndsAt = new Date(
-      existingCode.lastSentAt.getTime() + RESEND_COOLDOWN_SECONDS * 1000,
-    );
-    if (cooldownEndsAt > now) {
-      return; // Still within cooldown -- response stays identical either way.
-    }
-    await prisma.verificationCode.update({
-      where: { id: existingCode.id },
-      data: { lastSentAt: now },
-    });
-    await sendEmail(email, verificationCodeEmail(existingCode.code));
-    return;
-  }
-
-  await issueVerificationCode(userId, email);
-}
 
 function isUniqueConstraintViolation(error: unknown): boolean {
   return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";

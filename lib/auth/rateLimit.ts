@@ -13,16 +13,24 @@ export type RateLimitScope =
   | "signup"
   | "signin"
   | "forgot-password"
-  | "verify-email-resend";
+  | "verify-email-resend"
+  | "verify-email-check";
 
 // PRD v3 does not pin exact thresholds, only that these four endpoints
 // must be covered. Values below are deliberately generous for a single
 // human filling out a form, tight enough to block scripted abuse.
+//
+// "verify-email-check" (the code-submission endpoint itself) isn't in
+// AGENTS.md's list of four rate-limited endpoints, but a 6-digit code is
+// only ~1,000,000 possibilities -- guessable well within its 10-minute
+// expiry without a limiter. Added as defense-in-depth alongside the
+// documented four; flagged for review since it's not explicitly required.
 const LIMITS: Record<RateLimitScope, { requests: number; window: Parameters<typeof Ratelimit.slidingWindow>[1] }> = {
   signup: { requests: 5, window: "10 m" },
   signin: { requests: 5, window: "5 m" },
   "forgot-password": { requests: 5, window: "15 m" },
   "verify-email-resend": { requests: 5, window: "10 m" },
+  "verify-email-check": { requests: 5, window: "10 m" },
 };
 
 const limiters = new Map<RateLimitScope, Ratelimit>();

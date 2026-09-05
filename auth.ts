@@ -3,6 +3,17 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
 
+// Pinned explicitly (matches Auth.js's own 30-day default) so the manual
+// session creation used by email verification (PRD v3 5.2.3,
+// lib/auth/manualSession.ts) issues sessions with the same lifetime as
+// ones Auth.js creates itself via sign-in.
+export const SESSION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;
+
+// Exported so the email-verification route can call `authAdapter.createSession`
+// directly -- the same adapter instance Auth.js itself uses -- rather than
+// re-running the Credentials provider (PRD v3 5.2.3).
+export const authAdapter = PrismaAdapter(prisma);
+
 // Auth.js (v5) configuration.
 //
 // Session strategy is explicitly "database" (RULES-security-validation.md
@@ -17,9 +28,10 @@ import { prisma } from "@/lib/prisma";
 // is filled in during build step 9, once lib/auth/rateLimit.ts and
 // lib/auth/password.ts exist -- see skill.md's build order.
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma),
+  adapter: authAdapter,
   session: {
     strategy: "database",
+    maxAge: SESSION_MAX_AGE_SECONDS,
   },
   pages: {
     signIn: "/signin",
