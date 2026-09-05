@@ -6,10 +6,13 @@ import { z } from "zod";
 // the server route handler -- never redefined inline in either place).
 
 // PRD v3 does not specify a password complexity policy beyond "hash with
-// bcrypt at cost 12". A minimum length is the one property that must be
-// enforced before hashing (bcrypt truncates/ignores extremely long
-// inputs, and an empty or trivial password defeats the point of hashing
-// at all), so an 8-character minimum is applied as a standard default.
+// bcrypt at cost 12". The requirements below were added per product
+// request. Defined once here -- rather than as separate client-only
+// checks -- so the signup form's live checklist and this schema can
+// never drift apart, and so the server independently rejects a weak
+// password even if a request bypasses the client entirely (RULES-
+// security-validation.md: "server-side validation runs even though
+// client-side validation exists").
 export const emailSchema = z
   .string()
   .trim()
@@ -17,9 +20,51 @@ export const emailSchema = z
   .min(1, "Email is required")
   .email("Enter a valid email address");
 
-export const passwordSchema = z
-  .string()
-  .min(8, "Password must be at least 8 characters");
+export interface PasswordRequirement {
+  id: string;
+  label: string;
+  test: (value: string) => boolean;
+}
+
+export const PASSWORD_MIN_LENGTH = 8;
+
+// Order matters only for schema error ordering; the signup form decides
+// its own display order independently.
+export const PASSWORD_REQUIREMENTS: readonly PasswordRequirement[] = [
+  {
+    id: "lowercase",
+    label: "Password must contain a lowercase letter",
+    test: (value) => /[a-z]/.test(value),
+  },
+  {
+    id: "uppercase",
+    label: "Password must contain an uppercase letter",
+    test: (value) => /[A-Z]/.test(value),
+  },
+  {
+    id: "number",
+    label: "Password must contain a number",
+    test: (value) => /[0-9]/.test(value),
+  },
+  {
+    id: "special",
+    label: "Password must contain a special character (#@>^).",
+    test: (value) => /[#@>^]/.test(value),
+  },
+  {
+    id: "length",
+    label: "Minimum Of 8 Characters",
+    test: (value) => value.length >= PASSWORD_MIN_LENGTH,
+  },
+];
+
+export const passwordSchema = z.string().superRefine((value, ctx) => {
+  for (const requirement of PASSWORD_REQUIREMENTS) {
+    if (!requirement.test(value)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: requirement.label });
+    }
+  }
+});
 
 export const signupSchema = z.object({
   email: emailSchema,

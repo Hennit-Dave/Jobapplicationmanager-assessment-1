@@ -88,6 +88,56 @@ a {
   color: var(--color-error);
 }
 
+.field-hint {
+  font: var(--typescale-body-small-font);
+  color: var(--color-on-surface-variant);
+}
+
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+}
+
+.password-input-wrapper input {
+  flex: 1;
+  padding-right: calc(var(--spacing-very-large-spacing) + var(--spacing-small-spacing));
+}
+
+.password-toggle-button {
+  position: absolute;
+  top: 50%;
+  right: var(--spacing-small-spacing);
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: var(--spacing-extra-small-spacing);
+  color: var(--color-on-surface-variant);
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.password-toggle-button:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.password-requirements {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-extra-small-spacing);
+}
+
+.password-requirements li {
+  font: var(--typescale-body-small-font);
+  color: var(--color-error);
+}
+
 .form-message {
   font: var(--typescale-body-medium-font);
   padding: var(--spacing-medium-spacing);
