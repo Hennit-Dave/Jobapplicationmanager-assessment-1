@@ -8,7 +8,7 @@ How To Run It
 Clone the repository:
 
 bash
-git clone [your-repo-url]
+git clone [Hennit-Dave/Jobapplicationmanager]
 cd application-manager-track-auth
 
 Install dependencies:
