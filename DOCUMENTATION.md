@@ -192,7 +192,7 @@ Deleting the Session row instantly revokes access — no waiting for anything to
 The cookie itself carries no user data, just a random token.
 auth() reads it the same way whether the session was created by Auth.js itself or by one of this project's own routes.
 
-Why sign-in is a custom route instead of Auth.js's Credentials provider: confirmed by actually running it, Auth.js v5 throws UnsupportedStrategy on every /api/auth/* request when Credentials is the only provider and the session strategy is "database" — that combination simply isn't supported by the library. /api/signin reimplements the same logic (rate limit, emailVerified check, bcrypt compare) and calls the same adapter's createSession() directly:
+Why sign-in is a custom route instead of Auth.js's Credentials provider: confirmed by actually running it, Auth.js v5 throws UnsupportedStrategy on every /api/auth/ request when Credentials is the only provider and the session strategy is "database" — that combination simply isn't supported by the library. /api/signin reimplements the same logic (rate limit, emailVerified check, bcrypt compare) and calls the same adapter's createSession() directly:
 
 typescript
 const sessionToken = randomUUID();
@@ -298,7 +298,7 @@ Fix: Database sessions were a hard requirement (see "Session Management" above �
 Section 7: What This Slice Does Not Handle
 Scale limitations: A single PostgreSQL connection pool and one Upstash Redis instance for rate limiting. At high concurrency, session lookups against Postgres could become a bottleneck before Redis would — a dedicated session cache or read replicas would be the next step, along with a distributed rate-limiter setup if traffic is spread across multiple regions.
 
-What was left out because it was outside the brief: Social sign-in (Google/GitHub), two-factor authentication, passwordless magic links, profile editing, settings, and account deletion. The brief explicitly forbids all of these in Assessment 1.
+What was left out because it was outside the brief: Social sign-in (Google/GitHub), two-factor authentication, passwordless magic links, profile editing, settings, and account deletion.
 
 What was left out because I ran out of time: No audit log of sign-in attempts (IP, user agent, timestamp, success/failure) — useful for detecting suspicious activity in production. Email sending is synchronous inside the request (a slow or failing Resend call no longer crashes the request, but it does still add to response latency) — a background queue would decouple that in production.
 
