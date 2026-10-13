@@ -8,8 +8,8 @@ How To Run It
 Clone the repository:
 
 bash
-git clone [https://github.com/Hennit-Dave/Jobapplicationmanager]
-cd Jobapplicationmanager
+git clone https://github.com/Hennit-Dave/Jobapplicationmanager-assessment-1.git
+cd Jobapplicationmanager-assessment-1
 
 Install dependencies:
 
@@ -309,6 +309,23 @@ The one thing I would do differently from the start: not attempt to wire sign-in
 
 Evidence
 Screenshots below are from Prisma Studio (the local Postgres GUI) and one from the running app. A few PRD-required evidence items aren't captured below and still need a screenshot added: the exact curl command hitting /api/signup directly with its response, and a side-by-side of the same signup request submitted twice producing one User row.
+
+To capture them, with the dev server running (npm run dev):
+
+bash
+# 1. Direct signup call -- screenshot the command and its 200 response
+curl -i -X POST http://localhost:3000/api/signup \
+  -H "Content-Type: application/json" \
+  -d '{"email":"curl-evidence@example.com","password":"Evidence#123"}'
+
+# 2. Same signup fired twice at once -- both should return the same 200
+for i in 1 2; do
+  curl -s -X POST http://localhost:3000/api/signup \
+    -H "Content-Type: application/json" \
+    -d '{"email":"double-signup@example.com","password":"Evidence#123"}' &
+done; wait
+
+Then open Prisma Studio (npx prisma studio), filter User by double-signup@example.com, and screenshot the single row next to the two terminal responses.
 
 User table — bcrypt hashes, no plaintext password anywhere:
 ![User table showing bcrypt password hashes](screenshots/user-table-bcrypt-hashes.png)

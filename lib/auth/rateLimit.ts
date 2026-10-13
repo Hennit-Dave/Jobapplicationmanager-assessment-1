@@ -3,8 +3,8 @@ import { Redis } from "@upstash/redis";
 import { NextResponse } from "next/server";
 
 // AGENTS.md's non-negotiable rule 5: rate limiting keys combine IP and
-// account identifier, applied to signup, the Credentials provider's
-// authorize() callback, forgot-password, and verification resend.
+// account identifier, applied to signup, the custom /api/signin route
+// (before any bcrypt comparison), forgot-password, and verification resend.
 // RULES-security-validation.md requires a 429 with a retry indication.
 
 const redis = Redis.fromEnv();
