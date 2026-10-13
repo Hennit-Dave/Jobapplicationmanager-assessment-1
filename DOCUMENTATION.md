@@ -316,6 +316,9 @@ Hitting /api/signup directly with curl — 200 response, httpOnly verify_email_t
 Idempotent signup — the same signup fired twice concurrently; both requests get the identical 200 response:
 ![Two concurrent signup requests returning identical responses](screenshots/concurrent-signup-responses.png)
 
+…and the User table afterwards: exactly one row for double-signup@example.com, enforced by the User.email unique constraint:
+![User table with a single row for double-signup@example.com](screenshots/concurrent-signup-one-user-row.png)
+
 User table — bcrypt hashes, no plaintext password anywhere:
 ![User table showing bcrypt password hashes](screenshots/user-table-bcrypt-hashes.png)
 
